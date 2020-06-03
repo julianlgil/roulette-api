@@ -32,6 +32,13 @@ export class RedisService {
         return data;
     }
 
+    public static async scanKeys(pattern: string): Promise<string[]> {
+        const redis = this.createClient();
+        const keys: string[] = await redis.keys(`*${pattern}*`);
+        redis.quit();
+        return keys;
+    }
+
     public static async verifyIfExist(key: string): Promise<boolean> {
         const redis = this.createClient();
         const keys = await redis.keys(key);

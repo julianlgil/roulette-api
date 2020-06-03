@@ -100,10 +100,9 @@ router.post('/close-roulette',
 
 router.get('/roulettes', (req: Request, res: Response) => {
     LOGGER.info('Getting roulette list');
-    RouletteService.createRoulette()
-        .then(uuid => {
-            const response = {rouletteId: uuid} as ICreateRouletteResponse;
-            res.status(200).send(response);
+    RouletteService.getRouletteList()
+        .then(result => {
+            res.status(200).send(result);
         })
         .catch (error => {
             res.status(500).send(error);

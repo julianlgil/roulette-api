@@ -5,6 +5,7 @@ import {IBetRequest} from "../models/IBetRequest";
 import {IBet} from "../models/IBet";
 import {stringNullable} from "../utils/Types";
 import {IBetData} from "../models/IBetData";
+import {IRouletteStatus} from "../models/IRouletteStatus";
 
 const LOGGER = LoggerUtils.createLogger('RouletteService');
 
@@ -24,19 +25,11 @@ export default class RouletteService {
         }
     }
 
-    public static async getRouletteList(): Promise<string> {
-        try {
-            const uuid = uuidv4();
-            const rouletteKey = `roulette:${uuid}`;
-            const timestamp = new Date().toISOString();
-            await RedisService.saveHash(rouletteKey, 'timestamp', timestamp);
-            await RedisService.saveHash(rouletteKey, 'status', 'closed');
-            LOGGER.info('Roulette created with id: %s', uuid);
-            return uuid;
-        } catch (e) {
-            LOGGER.error('Roulette was not create. Cause: %s', e);
-            throw new Error('Roulette was not created');
-        }
+    public static async getRouletteList() {
+        const roulettePattern = 'roulette:';
+        const keys: string[] = await RedisService.scanKeys(roulettePattern);
+        LOGGER.info(keys);
+        return await this.getStatusRouletteKeys(keys);
     }
 
     public static async openRoulette( rouletteId: string) {
@@ -65,7 +58,7 @@ export default class RouletteService {
         const rouletteKey = `roulette:${rouletteId}`;
         const rouletteStatus = await RedisService.getHashKey(rouletteKey, 'status');
         if (rouletteStatus === 'closed') {
-            throw new Error('Bet denied. Cause: Bet is closed');
+            throw new Error('Bet denied. Cause: Roulette is closed');
         }
         LOGGER.info('Bet to save: %j', bet);
         try {
@@ -80,7 +73,7 @@ export default class RouletteService {
 
     public static async closeRoulette(rouletteId: string) {
         const rouletteKey = `roulette:${rouletteId}`;
-        //RedisService.saveHash(rouletteKey, 'status', 'closed');
+        RedisService.saveHash(rouletteKey, 'status', 'closed');
         const rouletteBetsKey = `bets:${rouletteId}`;
         const betsFromRedis = await RedisService.getAllHash(rouletteBetsKey);
         try {
@@ -106,4 +99,17 @@ export default class RouletteService {
         return betsRouletteList;
     }
 
+    private static async getStatusRouletteKeys(rouletteKeysList: string[]) {
+        const rouletteStatusList: IRouletteStatus[] = [];
+        for (let key of rouletteKeysList) {
+            const status = await RedisService.getHashKey(key, 'status');
+            const id = key.split(':')[1];
+            const rouletteStatus = {
+                rouletteId: id,
+                status
+            } as IRouletteStatus;
+            rouletteStatusList.push(rouletteStatus);
+        }
+        return rouletteStatusList;
+    }
 }
