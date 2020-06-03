@@ -1,7 +1,6 @@
 export default {
     apiPath: '',
-    loggerLevel: 'debug',
-    port: '8110',
-    redisConnections: `{ \"port\": 6379, \"host\": \"localhost"}`,
-
+    loggerLevel: process.env.LOGGER_LEVEL || 'debug',
+    port: process.env.PORT || '8110',
+    redisConnections: process.env.REDIS_CONECTION || '{ \"port\": 6379, \"host\": \"localhost"}',
 };

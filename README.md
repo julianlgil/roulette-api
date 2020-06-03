@@ -4,9 +4,13 @@ Install Dependencies:
   
     $ npm install
     
-Local run app:
+Local run app (require local redis server):
 
     $ npm start
+    
+Run docker app:
+
+    docker-compose up --build
 
 API:
 

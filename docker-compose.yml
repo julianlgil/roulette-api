@@ -1,0 +1,15 @@
+redis:
+  image: redis
+  container_name: cache
+  expose:
+    - 6379
+app:
+  build: ./
+  links:
+    - redis
+  ports:
+    - 8110:8110
+  environment:
+    - REDIS_CONECTION={"port":6379,"host":"cache"}
+    - LOGGER_LEVEL="info"
+    - PORT=8110
